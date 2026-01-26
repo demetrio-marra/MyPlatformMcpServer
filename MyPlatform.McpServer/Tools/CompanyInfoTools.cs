@@ -175,7 +175,7 @@ public sealed class CompanyInfoTools
     /// collection will be empty if no products are found.</returns>
     /// <exception cref="CustomToolException">Thrown if there is an error retrieving the product names, such as when the agent ID is not found.</exception>
     /// <usedBy>Troubleshouter</usedBy>
-    [McpServerTool(Name = "MyCompany_CompanyInfo_GetAllProductNames",
+    [McpServerTool(Name = "MyPlatform_CompanyInfo_GetAllProductNames",
         Idempotent = true, Destructive = false, OpenWorld = false, ReadOnly = true, UseStructuredContent = true),
         Description("CompanyInfo - Retrieves all available product names.")]
     public async Task<IEnumerable<string>> GetAllProductsAsync()
