@@ -22,12 +22,6 @@ namespace MyPlatformModels
             return await _companyInfoRepository.GetCompanyInfoProductsHierarchyItemsAsync(company, family, userAcl);
         }
 
-        public async Task<CompanyInfoProductHierarchyItem?> GetProductHierarchyAsync(Products product)
-        {
-            var userAcl = await _aclService.GetUserAclAsync();
-            return await _companyInfoRepository.GetProductHierarchyAsync(product, userAcl);
-        }
-
         public async Task<IEnumerable<CompanyInfoProductHierarchyItem>> GetProductHierarchyListAsync(Products product)
         {
             var userAcl = await _aclService.GetUserAclAsync();

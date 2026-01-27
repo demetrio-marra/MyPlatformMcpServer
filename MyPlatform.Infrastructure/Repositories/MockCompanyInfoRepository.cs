@@ -57,29 +57,6 @@ namespace MyPlatformInfrastructure.Repositories
             return Task.FromResult(query);
         }
 
-        public Task<CompanyInfoProductHierarchyItem?> GetProductHierarchyAsync(
-            Products product, 
-            AclModel? userAcl = null)
-        {
-            var productName = product.ToString();
-            var result = _mockHierarchy.FirstOrDefault(x => x.Product == productName);
-
-            if (result != null && userAcl != null && userAcl.AclDetails?.Any() == true)
-            {
-                var allowedCompanies = userAcl.AclDetails
-                    .Where(a => a.Company.HasValue)
-                    .Select(a => ((Companies)a.Company!.Value).ToString())
-                    .ToHashSet();
-                
-                if (allowedCompanies.Any() && result.Company != null && !allowedCompanies.Contains(result.Company))
-                {
-                    return Task.FromResult<CompanyInfoProductHierarchyItem?>(null);
-                }
-            }
-
-            return Task.FromResult(result);
-        }
-
         public Task<IEnumerable<CompanyInfoProductHierarchyItem>> GetProductHierarchyListAsync(
             Products product, 
             AclModel? userAcl = null)

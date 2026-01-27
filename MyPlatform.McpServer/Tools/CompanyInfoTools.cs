@@ -101,20 +101,21 @@ public sealed class CompanyInfoTools
     }
 
     /// <summary>
-    /// Asynchronously retrieves the company and family hierarchy information for a specified product.
+    /// Asynchronously retrieves all company and family hierarchy information for a specified product.
     /// </summary>
     /// <remarks>This method logs warnings and errors related to validation and retrieval issues. Ensure that
-    /// the product name is valid and exists in the database to avoid exceptions.</remarks>
+    /// the product name is valid and exists in the database to avoid exceptions. A product may belong to multiple
+    /// company/family combinations, and all matches will be returned.</remarks>
     /// <param name="product">The name of the product for which to find the hierarchy. This parameter cannot be null or empty.</param>
-    /// <returns>A <see cref="CompanyInfoProductHierarchyItem"/> representing the hierarchy information of the specified product,
-    /// or <see langword="null"/> if the product hierarchy is not found.</returns>
+    /// <returns>An <see cref="IEnumerable{CompanyInfoProductHierarchyItem}"/> representing all hierarchy information of the specified product.
+    /// Returns an empty collection if the product hierarchy is not found.</returns>
     /// <exception cref="CustomToolException">Thrown if there is a validation error, the product hierarchy is not found, or an error occurs during the
     /// retrieval process.</exception>
     /// <usedBy>Statistics tools</usedBy>
     [McpServerTool(Name = "MyPlatform_CompanyInfo_FindProductHierarchy",
         Idempotent = true, OpenWorld = false, ReadOnly = true, Destructive = false, UseStructuredContent = true),
         Description("CompanyInfo - Finds which Company and Family a specific Product belongs to.")]
-    public async Task<CompanyInfoProductHierarchyItem?> GetProductHierarchyAsync(
+    public async Task<IEnumerable<CompanyInfoProductHierarchyItem>> GetProductHierarchyAsync(
         [Description(Desc_Product)] string product)
     {
         Products? productEnum = null;
@@ -141,17 +142,19 @@ public sealed class CompanyInfoTools
 
         try
         {
-            var result = await _companyInfoService.GetProductHierarchyAsync(productEnum.Value);
+            var results = await _companyInfoService.GetProductHierarchyListAsync(productEnum.Value);
 
-            if (result == null)
+            var resultList = results.ToList();
+
+            if (!resultList.Any())
             {
                 _logger.LogInformation("Product hierarchy not found for Product: {Product}", product);
                 throw new CustomToolException($"Product hierarchy not found for product: '{product}'. The product may not exist in the database or may be disabled.");
             }
 
-            _logger.LogInformation("Successfully retrieved product hierarchy for product {Product}", product);
+            _logger.LogInformation("Successfully retrieved {Count} product hierarchy items for product {Product}", resultList.Count, product);
 
-            return result;
+            return resultList;
         }
         catch (AgentIdNotFoundException ex)
         {
