@@ -38,7 +38,7 @@ builder.Services.AddHttpClient<IACLService, MockACLService>((svc, client) =>
 builder.Services.Configure<FileServerConfiguration>(
     builder.Configuration.GetSection("FileServerConfiguration"));
 
-builder.Services.AddHttpClient<IFileServerHttpClient, MyPlatformFileServerHttpClient>((svc, client) =>
+builder.Services.AddHttpClient<IFileServerHttpClient, MockFileServerHttpClient>((svc, client) =>
 {
     var fileServerConfig = svc.GetRequiredService<Microsoft.Extensions.Options.IOptions<FileServerConfiguration>>().Value;
     client.BaseAddress = new Uri(fileServerConfig.Endpoint);
