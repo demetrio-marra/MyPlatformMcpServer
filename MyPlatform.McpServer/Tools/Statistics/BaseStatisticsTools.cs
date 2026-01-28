@@ -15,7 +15,7 @@ namespace MyPlatformMcpServer.Tools.Statistics
         protected const string Desc_Company = "Name of the company filter";
         protected const string Desc_Family = "Product's family name filter";
         protected const string Desc_Product = "Product's name filter";
-        protected const string Desc_ProvisioningPhase = "Product lifecycle phase (e.g. Create, Modify, Renew, Deactivation, Expiration, Get, GDPR) filter";
+        protected const string Desc_ProvisioningPhase = "Product lifecycle phase (e.g. FirstActivation, Renew, Deactivation, Expiration) filter";
         protected const string Desc_DataPartitioning = "Type of partitioning applied to returned data (e.g. Year, Month, Day)";
 
         // Test companies to be filtered out from hierarchy resolution
