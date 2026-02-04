@@ -38,7 +38,7 @@ jobs:
         run: |
           CURL_CMD=(curl -sSf -X POST "https://gitlab.com/api/v4/projects/${{ secrets.GITLAB_PROJECT_ID }}/trigger/pipeline"
             -F token=${{ secrets.GITLAB_TRIGGER_TOKEN }}
-            -F ref=main
+            -F ref=${{ github.ref_name }}
             -F "variables[CI_COMMIT_SHA]=$CI_COMMIT_SHA"
             -F "variables[CI_COMMIT_SHORT_SHA]=$CI_COMMIT_SHORT_SHA"
             -F "variables[CI_COMMIT_MESSAGE]=$CI_COMMIT_MESSAGE")
