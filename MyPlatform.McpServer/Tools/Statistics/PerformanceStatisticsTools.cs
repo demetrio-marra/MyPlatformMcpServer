@@ -1,5 +1,6 @@
 using AutoMapper;
 using MyPlatformMcpServer.DTOs;
+using MyPlatformModels.Models;
 using MyPlatformModels.Services;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
@@ -24,11 +25,11 @@ public sealed class PerformanceStatisticsTools : BaseStatisticsTools
     public Task<IEnumerable<PerformanceStatisticsResultDTO>> GetAsync(
         [Description(Desc_QueryDateFrom)] string queryDateFrom,
         [Description(Desc_QueryDateTo)] string queryDateTo,
-        [Description(Desc_Product)] string product,
-        [Description(Desc_DataPartitioning)] string dataPartitioning,
-        [Description(Desc_ProvisioningPhase)] string? provisioningPhase = null,
-        [Description(Desc_Company)] string? company = null,
-        [Description(Desc_Family)] string? family = null)
+        [Description(Desc_Product)] Products product,
+        [Description(Desc_DataPartitioning)] MyPlatform_Statistics_DataPartitioning dataPartitioning,
+        [Description(Desc_ProvisioningPhase)] enumStatisticType? provisioningPhase = null,
+        [Description(Desc_Company)] Companies? company = null,
+        [Description(Desc_Family)] Families? family = null)
         => GetStatisticsInternalAsync<PerformanceStatisticsResultDTO>(
             queryDateFrom,
             queryDateTo,

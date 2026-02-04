@@ -15,11 +15,8 @@ namespace MyPlatformMcpServer.Tools.Statistics
         protected const string Desc_Company = "Name of the company filter";
         protected const string Desc_Family = "Product's family name filter";
         protected const string Desc_Product = "Product's name filter";
-        protected const string Desc_ProvisioningPhase = "Product lifecycle phase (e.g. FirstActivation, Renew, Deactivation, Expiration) filter";
-        protected const string Desc_DataPartitioning = "Type of partitioning applied to returned data (e.g. Year, Month, Day)";
-
-        // Test companies to be filtered out from hierarchy resolution
-        protected readonly string[] Test_Companies = ["Test1", "Test2", "Test3"];
+        protected const string Desc_ProvisioningPhase = "Product lifecycle phase filter";
+        protected const string Desc_DataPartitioning = "Group data by time period";
 
         // Shared dependencies
         protected readonly IStatisticsService _statisticsService;
@@ -42,11 +39,11 @@ namespace MyPlatformMcpServer.Tools.Statistics
         protected async Task<IEnumerable<TDto>> GetStatisticsInternalAsync<TDto>(
             string queryDateFrom,
             string queryDateTo,
-            string product,
-            string dataPartitioning,
-            string? provisioningPhase,
-            string? company,
-            string? family)
+            Products product,
+            MyPlatform_Statistics_DataPartitioning dataPartitioning,
+            enumStatisticType? provisioningPhase,
+            Companies? company,
+            Families? family)
         {
             // Validate and parse required queryDateFrom parameter
             if (string.IsNullOrWhiteSpace(queryDateFrom))
@@ -81,77 +78,16 @@ namespace MyPlatformMcpServer.Tools.Statistics
                 throw new CustomToolException("queryDateFrom cannot be after queryDateTo");
             }
 
-            // Validate and parse required product parameter
-            if (string.IsNullOrWhiteSpace(product))
-            {
-                _logger.LogWarning("Validation error in GetAsync: product is required");
-                throw new CustomToolException("product parameter is required");
-            }
-
-            var productEnum = MyPlatformEnumHelper.LabelToEnum<Products>(product.Trim());
-            if (productEnum == null)
-            {
-                _logger.LogWarning("Validation error in GetAsync: invalid product value {Product}", product);
-                throw new CustomToolException($"Invalid product value: '{product}'. Valid values are: {string.Join(", ", Enum.GetNames<Products>())}");
-            }
-
-            // Validate and parse required dataPartitioning parameter
-            if (string.IsNullOrWhiteSpace(dataPartitioning))
-            {
-                _logger.LogWarning("Validation error in GetAsync: dataPartitioning is required");
-                throw new CustomToolException("dataPartitioning parameter is required");
-            }
-
-            var dataPartitioningEnum = MyPlatformEnumHelper.LabelToEnum<MyPlatform_Statistics_DataPartitioning>(dataPartitioning.Trim());
-            if (dataPartitioningEnum == null)
-            {
-                _logger.LogWarning("Validation error in GetAsync: invalid dataPartitioning value {DataPartitioning}", dataPartitioning);
-                throw new CustomToolException($"Invalid dataPartitioning value: '{dataPartitioning}'. Valid values are: {string.Join(", ", Enum.GetNames<MyPlatform_Statistics_DataPartitioning>())}");
-            }
-
-            // Parse optional company parameter
-            Companies? companyEnum = null;
-            if (!string.IsNullOrWhiteSpace(company))
-            {
-                companyEnum = MyPlatformEnumHelper.LabelToEnum<Companies>(company.Trim());
-                if (companyEnum == null)
-                {
-                    _logger.LogWarning("Validation error in GetAsync: invalid company value {Company}", company);
-                    throw new CustomToolException($"Invalid company value: '{company}'. Valid values are: {string.Join(", ", Enum.GetNames<Companies>())}");
-                }
-            }
-
-            // Parse optional family parameter
-            Families? familyEnum = null;
-            if (!string.IsNullOrWhiteSpace(family))
-            {
-                familyEnum = MyPlatformEnumHelper.LabelToEnum<Families>(family.Trim());
-                if (familyEnum == null)
-                {
-                    _logger.LogWarning("Validation error in GetAsync: invalid family value {Family}", family);
-                    throw new CustomToolException($"Invalid family value: '{family}'. Valid values are: {string.Join(", ", Enum.GetNames<Families>())}");
-                }
-            }
-
-            // Parse optional provisioningPhase parameter
-            enumStatisticType? provisioningPhaseEnum = null;
-            if (!string.IsNullOrWhiteSpace(provisioningPhase))
-            {
-                provisioningPhaseEnum = MyPlatformEnumHelper.LabelToEnum<enumStatisticType>(provisioningPhase.Trim());
-                if (provisioningPhaseEnum == null)
-                {
-                    _logger.LogWarning("Validation error in GetAsync: invalid provisioningPhase value {ProvisioningPhase}", provisioningPhase);
-                    throw new CustomToolException($"Invalid provisioningPhase value: '{provisioningPhase}'. Valid values are: {string.Join(", ", Enum.GetNames<enumStatisticType>())}");
-                }
-            }
-
             // Resolve company and family from product hierarchy if not provided
+            Companies? companyEnum = company;
+            Families? familyEnum = family;
+
             if (familyEnum == null || companyEnum == null)
             {
                 IEnumerable<CompanyInfoProductHierarchyItem> hierarchyList;
                 try
                 {
-                    hierarchyList = await _companyInfoService.GetProductHierarchyListAsync(productEnum.Value);
+                    hierarchyList = await _companyInfoService.GetProductHierarchyListAsync(product);
                 }
                 catch (Exception ex)
                 {
@@ -159,21 +95,31 @@ namespace MyPlatformMcpServer.Tools.Statistics
                     throw new CustomToolException($"Failed to retrieve product hierarchy for product: '{product}'. Contact support team.", ex);
                 }
 
-                var filteredHierarchyList = hierarchyList.Where(x => !Test_Companies.Contains(x.Company)).ToList();
-
-                if (!filteredHierarchyList.Any())
+                if (!hierarchyList.Any())
                 {
                     _logger.LogWarning("Validation error in GetAsync: no valid hierarchy found for product {Product}", product);
                     throw new CustomToolException($"No valid hierarchy found for product: '{product}'");
                 }
 
-                if (filteredHierarchyList.Count() > 1)
+                if (companyEnum.HasValue)
                 {
-                    _logger.LogWarning("Validation error in GetAsync: ambiguous product hierarchy for product value {Product}", product);
-                    throw new CustomToolException($"Ambiguous product hierarchy for product value: '{product}'. Please specify both family and company parameters to disambiguate from this list: {System.Text.Json.JsonSerializer.Serialize(filteredHierarchyList)}");
+                    hierarchyList = hierarchyList.Where(h => h.Company != null && h.Company.Equals(companyEnum.Value.ToString()))
+                        .ToList();
                 }
 
-                var hierarchy = filteredHierarchyList.First();
+                if (familyEnum.HasValue)
+                {
+                    hierarchyList = hierarchyList.Where(h => h.Family != null && h.Family.Equals(familyEnum.Value.ToString()))
+                        .ToList();
+                }
+
+                if (hierarchyList.Count() > 1)
+                {
+                    _logger.LogWarning("Validation error in GetAsync: ambiguous product hierarchy for product value {Product}", product);
+                    throw new CustomToolException($"Ambiguous product hierarchy for product value: '{product}'. Please specify both family and company parameters to disambiguate from this list: {System.Text.Json.JsonSerializer.Serialize(hierarchyList)}");
+                }
+
+                var hierarchy = hierarchyList.First();
                 if (familyEnum == null)
                 {
                     familyEnum = MyPlatformEnumHelper.LabelToEnum<Families>(hierarchy.Family);
@@ -187,17 +133,17 @@ namespace MyPlatformMcpServer.Tools.Statistics
             try
             {
                 // Validate company-family-product hierarchy relationships
-                await _companyInfoService.ValidateProductHierarchy(companyEnum, familyEnum, productEnum);
+                await _companyInfoService.ValidateProductHierarchy(companyEnum, familyEnum, product);
 
                 // Call the statistics service
                 var results = await _statisticsService.GetAsync(
                     dateFrom,
                     dateTo,
-                    productEnum.Value,
-                    dataPartitioningEnum.Value,
+                    product,
+                    dataPartitioning,
                     companyEnum,
                     familyEnum,
-                    provisioningPhaseEnum);
+                    provisioningPhase);
 
                 var mappedResults = _mapper.Map<IEnumerable<TDto>>(results);
 

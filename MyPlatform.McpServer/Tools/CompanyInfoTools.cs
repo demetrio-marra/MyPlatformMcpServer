@@ -38,36 +38,13 @@ public sealed class CompanyInfoTools
         Idempotent = true, OpenWorld = false, ReadOnly = true, Destructive = false, UseStructuredContent = true),
         Description("CompanyInfo - Retrieves the Company/Family/Product flattened map. Omit filters to get the complete map.")]
     public async Task<IEnumerable<CompanyInfoProductHierarchyItem>> GetProductsHierarchyAsync(
-        [Description(Desc_Company)] string? company = null,
-        [Description(Desc_Family)] string? family = null)
+        [Description(Desc_Company)] Companies? company = null,
+        [Description(Desc_Family)] Families? family = null)
     {
-        Companies? companyEnum = null;
-        Families? familyEnum = null;
-
         try
         {
-            // Parse and validate company parameter
-            if (!string.IsNullOrWhiteSpace(company))
-            {
-                companyEnum = MyPlatformEnumHelper.LabelToEnum<Companies>(company);
-                if (companyEnum == null)
-                {
-                    throw new ArgumentException($"Invalid company value: '{company}'. Valid values are: {string.Join(", ", Enum.GetNames<Companies>())}");
-                }
-            }
-
-            // Parse and validate family parameter
-            if (!string.IsNullOrWhiteSpace(family))
-            {
-                familyEnum = MyPlatformEnumHelper.LabelToEnum<Families>(family);
-                if (familyEnum == null)
-                {
-                    throw new ArgumentException($"Invalid family value: '{family}'. Valid values are: {string.Join(", ", Enum.GetNames<Families>())}");
-                }
-            }
-
             // Validate arguments using the service method
-            await _companyInfoService.ValidateProductHierarchy(companyEnum, familyEnum);
+            await _companyInfoService.ValidateProductHierarchy(company, family);
         }
         catch (ArgumentException ex)
         {
@@ -77,7 +54,7 @@ public sealed class CompanyInfoTools
 
         try
         {
-            var ret = await _companyInfoService.GetCompanyInfoProductsHierarchyItemsAsync(companyEnum, familyEnum);
+            var ret = await _companyInfoService.GetCompanyInfoProductsHierarchyItemsAsync(company, family);
 
             // ci sono prodotti sbagliati su db: fixiamo qui
             var cleaned = ret.Where(item =>
@@ -116,33 +93,11 @@ public sealed class CompanyInfoTools
         Idempotent = true, OpenWorld = false, ReadOnly = true, Destructive = false, UseStructuredContent = true),
         Description("CompanyInfo - Finds which Company and Family a specific Product belongs to.")]
     public async Task<IEnumerable<CompanyInfoProductHierarchyItem>> GetProductHierarchyAsync(
-        [Description(Desc_Product)] string product)
+        [Description(Desc_Product)] Products product)
     {
-        Products? productEnum = null;
-
         try
         {
-            // Parse and validate product parameter
-            if (string.IsNullOrWhiteSpace(product))
-            {
-                throw new ArgumentException("Product parameter is required and cannot be null or empty.");
-            }
-
-            productEnum = MyPlatformEnumHelper.LabelToEnum<Products>(product.Trim());
-            if (productEnum == null)
-            {
-                throw new ArgumentException($"Invalid product value: '{product}'. Valid values are: {string.Join(", ", Enum.GetNames<Products>())}");
-            }
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning(ex, "Validation error in GetProductHierarchyAsync: {ErrorMessage}", ex.Message);
-            throw new CustomToolException("Validation error in GetProductHierarchy: " + ex.Message, ex);
-        }
-
-        try
-        {
-            var results = await _companyInfoService.GetProductHierarchyListAsync(productEnum.Value);
+            var results = await _companyInfoService.GetProductHierarchyListAsync(product);
 
             var resultList = results.ToList();
 
