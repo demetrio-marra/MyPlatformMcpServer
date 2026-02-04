@@ -6,7 +6,7 @@
 
 A Model Context Protocol (MCP) server implementation for MyPlatform, providing AI agents with structured access to company information, performance statistics, chart generation, and file management capabilities.
 
-## ?? Features
+## Features
 
 - **Model Context Protocol (MCP) Support**: Full implementation of the MCP specification for AI agent integration
 - **Company Information Tools**: Retrieve and navigate company/family/product hierarchies
