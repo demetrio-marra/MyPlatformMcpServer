@@ -22,19 +22,19 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["MyPlatformMcpServer/MyPlatformMcpServer.csproj", "MyPlatformMcpServer/"]
-RUN dotnet restore "./MyPlatformMcpServer/MyPlatformMcpServer.csproj"
+COPY ["MyPlatform.McpServer/MyPlatform.McpServer.csproj", "MyPlatform.McpServer/"]
+RUN dotnet restore "./MyPlatform.McpServer/MyPlatform.McpServer.csproj"
 COPY . .
-WORKDIR "/src/MyPlatformMcpServer"
-RUN dotnet build "./MyPlatformMcpServer.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/MyPlatform.McpServer"
+RUN dotnet build "./MyPlatform.McpServer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./MyPlatformMcpServer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./MyPlatform.McpServer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MyPlatformMcpServer.dll"]
+ENTRYPOINT ["dotnet", "MyPlatform.McpServer.dll"]
