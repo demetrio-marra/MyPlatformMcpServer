@@ -29,9 +29,9 @@ builder.Services.Configure<AclConfiguration>(
 
 builder.Services.AddHttpClient<IACLService, MockACLService>((svc, client) =>
 {
-    var aclConfig = svc.GetRequiredService<Microsoft.Extensions.Options.IOptions<AclConfiguration>>().Value;
-    client.BaseAddress = new Uri(aclConfig.Endpoint);
-    client.DefaultRequestHeaders.Add(aclConfig.ApiKeyHeaderName, aclConfig.ApiKeyValue);
+    //var aclConfig = svc.GetRequiredService<Microsoft.Extensions.Options.IOptions<AclConfiguration>>().Value;
+    //client.BaseAddress = new Uri(aclConfig.Endpoint);
+    //client.DefaultRequestHeaders.Add(aclConfig.ApiKeyHeaderName, aclConfig.ApiKeyValue);
 });
 
 // Configure FileServer HTTP client
@@ -40,9 +40,9 @@ builder.Services.Configure<FileServerConfiguration>(
 
 builder.Services.AddHttpClient<IFileServerHttpClient, MockFileServerHttpClient>((svc, client) =>
 {
-    var fileServerConfig = svc.GetRequiredService<Microsoft.Extensions.Options.IOptions<FileServerConfiguration>>().Value;
-    client.BaseAddress = new Uri(fileServerConfig.Endpoint);
-    client.DefaultRequestHeaders.Add(fileServerConfig.ApiKeyHeaderName, fileServerConfig.ApiKeyValue);
+    //var fileServerConfig = svc.GetRequiredService<Microsoft.Extensions.Options.IOptions<FileServerConfiguration>>().Value;
+    //client.BaseAddress = new Uri(fileServerConfig.Endpoint);
+    //client.DefaultRequestHeaders.Add(fileServerConfig.ApiKeyHeaderName, fileServerConfig.ApiKeyValue);
 });
 
 // Configure AutoMapper - scan all loaded assemblies for profiles
